@@ -1,0 +1,45 @@
+#!/bin/bash
+
+RG=false
+NO_ALBUM=false
+EXTRA_ARGS=()
+URL=""
+
+HELP="Usage: yt-albumdownload [--help] [--rg] [--no-album] <Youtube playlist URL>
+
+--rg: Apply replaygain
+--no-album: Don't treat as album when applying replaygain"
+
+while (( "$#" )); do
+    case "$1" in
+        --help)
+            echo "$HELP"
+            exit 1
+            ;;
+        --rg)
+            RG=true
+            shift
+            ;;
+        --no-album)
+            NO_ALBUM=true
+            shift
+            ;;
+        *)
+            URL=$1
+            shift
+            ;;
+    esac
+done
+
+if [ $RG = true ]; then
+    if [ $NO_ALBUM = true ]; then
+        EXTRA_ARGS=(--use-postprocessor 'ReplayGain:when=playlist;no_album=true')
+    else
+        EXTRA_ARGS=(--use-postprocessor 'ReplayGain:when=playlist')
+    fi
+fi
+
+yt-dlp --parse-metadata "%(channel)s:%(meta_artist)s" --parse-metadata "playlist_index:%(meta_track)s" \
+    --parse-metadata "playlist_title:%(meta_album)s" --parse-metadata ":(?P<meta_date>)" \
+    --replace-in-metadata meta_artist " - Topic" "" --embed-metadata --extract-audio \
+    --output "%(meta_artist)s/%(meta_album)s/%(meta_track)s %(title)s.%(ext)s" "${EXTRA_ARGS[@]}" "$URL"

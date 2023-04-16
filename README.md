@@ -2,6 +2,8 @@ Postprocessor that applies replaygain to downloaded files if possible. If an ent
 
 It uses [rsgain](https://github.com/complexlogic/rsgain), so make sure that is installed first. Other software may be enabled in the future, if I can be bothered with it (I just put this together in a couple of hours, for my own benefit).
 
+As a bonus, I have included my Bash script for downloading albums from Youtube: [yt-albumdownload]. It arranges the files in the structure: `[artist]/[album]/[track number] [track name].[extension]`, where `artist` is taken from the playlist uploader name (with that pesky " - Topic" suffix stripped). It also strips date from the metadata, as those are mostly incorrect.
+
 ## Installation
 
 ```shell
