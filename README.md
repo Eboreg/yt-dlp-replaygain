@@ -25,5 +25,5 @@ yt-dlp --use-postprocessor "ReplayGain:when=playlist;no_album=true" [playlist UR
 yt-dlp --use-postprocessor ReplayGain:when=playlist --postprocessor-args ReplayGain:no_album [playlist URL]
 
 # Download a single track:
-yt-dlp --use-postprocessor ReplayGain:when=after_move [playlist URL]
+yt-dlp --use-postprocessor ReplayGain:when=after_move [track URL]
 ```
