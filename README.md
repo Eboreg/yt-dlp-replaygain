@@ -4,8 +4,6 @@ It uses [rsgain](https://github.com/complexlogic/rsgain), so make sure that is i
 
 ## Installation
 
-Maybe this works:
-
 ```shell
 python3 -m pip install -U https://github.com/Eboreg/yt-dlp-replaygain/archive/master.zip
 ```
