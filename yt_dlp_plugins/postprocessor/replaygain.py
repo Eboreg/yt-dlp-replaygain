@@ -15,8 +15,15 @@ class ReplayGainPP(PostProcessor):
     def run(self, information):
         filepaths = []
         rsgain_args = ["rsgain", "custom", "--tagmode=i", "--loudness=-18", "--opus-mode=r"]
+
+        if "no_album" in self._configuration_args("ReplayGain"):
+            self.no_album = True
+
         if not self.no_album:
             rsgain_args.append("--album")
+
+        if "filepath" in information and information["filepath"].split(".")[-1] in self.extensions:
+            filepaths.append(information["filepath"])
 
         for entry in information.get("entries", []):
             for download in entry.get("requested_downloads", []):
