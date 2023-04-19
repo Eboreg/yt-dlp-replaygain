@@ -1,8 +1,13 @@
 Postprocessor that applies replaygain to downloaded files if possible. If an entire playlist has been downloaded, it will be treated as an album, i.e. album replaygain will be set (unless explicitly disabled; see below).
 
-It uses [rsgain](https://github.com/complexlogic/rsgain), so make sure that is installed first. Other software may be enabled in the future, if I can be bothered with it (I just put this together in a couple of hours, for my own benefit).
+It tries to use these applications, in this order:
 
-As a bonus, I have included my Bash script for downloading albums from Youtube: [yt-albumdownload](https://github.com/Eboreg/yt-dlp-replaygain/blob/master/yt-albumdownload). It arranges the files in the structure: `[artist]/[album]/[track number] [track name].[extension]`, where `artist` is taken from the playlist uploader name (with that pesky " - Topic" suffix stripped). It also strips date from the metadata, as those are mostly incorrect.
+1. [rsgain](https://github.com/complexlogic/rsgain)
+2. [mp3gain](https://mp3gain.sourceforge.net/)
+3. [vorbisgain](https://sjeng.org/vorbisgain.html)
+4. [metaflac](https://xiph.org/flac/documentation_tools_metaflac.html)
+
+As a bonus, I have included my Bash script for downloading albums from Youtube: [yt-albumdownload](https://github.com/Eboreg/yt-dlp-replaygain/blob/master/yt-albumdownload). It arranges the files in the structure: `[album artist]/[album]/[track number] [track name].[extension]`, where `album artist` is taken from the playlist uploader name (with that pesky " - Topic" suffix stripped).
 
 ## Installation
 

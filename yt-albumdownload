@@ -2,19 +2,39 @@
 
 RG=false
 NO_ALBUM=false
-EXTRA_ARGS=()
+PREVIEW=false
+CUSTOM_YEAR=false
+DUMP=false
 URL=""
 
-HELP="Usage: yt-albumdownload [--help] [--rg] [--no-album] <Youtube playlist URL>
+HELP="Usage: yt-albumdownload [--help] [--rg] [--no-album] [--year YEAR] [--preview] [--dump] <Youtube playlist URL>
+
+Some arguments are mutually exclusive. It's probably somewhat self-evident which ones.
 
 --rg: Apply replaygain
---no-album: Don't treat as album when applying replaygain"
+--no-album: Don't treat as album when applying replaygain
+--year: Use YEAR instead of parsing release year (could be an empty string)
+--preview: Just output preview JSON (NB: File extensions will be unknown at this point)
+--dump: Just dump complete JSON output from yt-dlp to stdout"
 
 while (( "$#" )); do
     case "$1" in
         --help)
             echo "$HELP"
             exit 1
+            ;;
+        --dump)
+            DUMP=true
+            shift
+            ;;
+        --preview)
+            PREVIEW=true
+            shift
+            ;;
+        --year)
+            CUSTOM_YEAR=true
+            YEAR=$2
+            shift 2
             ;;
         --rg)
             RG=true
@@ -31,15 +51,47 @@ while (( "$#" )); do
     esac
 done
 
-if [ $RG = true ]; then
-    if [ $NO_ALBUM = true ]; then
-        EXTRA_ARGS=(--use-postprocessor 'ReplayGain:when=playlist;no_album=true')
+ARGS=(
+    --parse-metadata "uploader:%(meta_album_artist)s"
+    --parse-metadata "%(playlist_index)02d:%(meta_track)s"
+    --parse-metadata "artist:%(meta_artist)s"
+    --parse-metadata "playlist_title:%(meta_album)s"
+    --parse-metadata "release_year:%(meta_date)s"
+    --parse-metadata "release_year:%(meta_year)s"
+    --replace-in-metadata meta_album_artist " - Topic" ""
+    --replace-in-metadata meta_date "^NA$" ""
+    --replace-in-metadata meta_year "^NA$" ""
+    --extract-audio
+)
+
+if $CUSTOM_YEAR; then
+    ARGS+=(
+        --replace-in-metadata meta_date "^.*$" "$YEAR"
+        --replace-in-metadata meta_year "^.*$" "$YEAR"
+    )
+fi
+
+if $DUMP; then
+    yt-dlp "${ARGS[@]}" --dump-single-json --simulate "$URL"
+    exit 0
+fi
+
+if $PREVIEW; then
+    JQ_ARGS=(
+        '.entries[]|{album: .meta_album, album_artist: .meta_album_artist,'
+        'track: .meta_track, artist: .meta_artist, title: .title, date: .meta_date,'
+        'filename: [.meta_album_artist, "/", .meta_album, "/", .meta_track, " ", .title, ".[ext]"]|add}'
+    )
+    yt-dlp "${ARGS[@]}" --dump-single-json --simulate "$URL" | jq "${JQ_ARGS[*]}"
+    exit 0
+fi
+
+if $RG; then
+    if $NO_ALBUM; then
+        ARGS+=(--use-postprocessor 'ReplayGain:when=playlist;no_album=true')
     else
-        EXTRA_ARGS=(--use-postprocessor 'ReplayGain:when=playlist')
+        ARGS+=(--use-postprocessor 'ReplayGain:when=playlist')
     fi
 fi
 
-yt-dlp --parse-metadata "%(channel)s:%(meta_artist)s" --parse-metadata "playlist_index:%(meta_track)s" \
-    --parse-metadata "playlist_title:%(meta_album)s" --parse-metadata ":(?P<meta_date>)" \
-    --replace-in-metadata meta_artist " - Topic" "" --embed-metadata --extract-audio \
-    --output "%(meta_artist)s/%(meta_album)s/%(meta_track)s %(title)s.%(ext)s" "${EXTRA_ARGS[@]}" "$URL"
+yt-dlp "${ARGS[@]}" --output "%(meta_album_artist)s/%(meta_album)s/%(meta_track)s %(title)s.%(ext)s" "$URL"
