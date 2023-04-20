@@ -1,30 +1,44 @@
 #!/bin/bash
 
-RG=false
-NO_ALBUM=false
-PREVIEW=false
 CUSTOM_YEAR=false
 DUMP=false
+NO_ALBUM_RG=false
+NO_RG=false
+PREVIEW=false
 URL=""
+VARIOUS=false
 
-HELP="Usage: yt-albumdownload [--help] [--rg] [--no-album] [--year YEAR] [--preview] [--dump] <Youtube playlist URL>
+HELP="Usage: yt-albumdownload [options] <Youtube playlist URL>
 
 Some arguments are mutually exclusive. It's probably somewhat self-evident which ones.
 
---rg: Apply replaygain
---no-album: Don't treat as album when applying replaygain
---year: Use YEAR instead of parsing release year (could be an empty string)
+--help: This thing
+--various: Set album artist and immediate subdirectory to 'Various Artists' and filename to
+  '[track #] [track artist] - [track title]'; implies --no-album-rg
+--no-rg: Don't apply replaygain
+--no-album-rg: Don't treat as album when applying replaygain
+--year <YEAR>: Use YEAR instead of parsing release year (could be an empty string)
 --preview: Just output preview JSON (NB: File extensions will be unknown at this point)
 --dump: Just dump complete JSON output from yt-dlp to stdout"
+
+if [ "$#" -eq 0 ]; then
+    echo "$HELP"
+    exit 0
+fi
 
 while (( "$#" )); do
     case "$1" in
         --help)
             echo "$HELP"
-            exit 1
+            exit 0
             ;;
         --dump)
             DUMP=true
+            shift
+            ;;
+        --various)
+            VARIOUS=true
+            NO_ALBUM_RG=true
             shift
             ;;
         --preview)
@@ -36,12 +50,12 @@ while (( "$#" )); do
             YEAR=$2
             shift 2
             ;;
-        --rg)
-            RG=true
+        --no-rg)
+            NO_RG=true
             shift
             ;;
         --no-album)
-            NO_ALBUM=true
+            NO_ALBUM_RG=true
             shift
             ;;
         *)
@@ -63,6 +77,13 @@ ARGS=(
     --replace-in-metadata meta_year "^NA$" ""
     --extract-audio
 )
+
+if $VARIOUS; then
+    ARGS+=(--replace-in-metadata meta_album_artist "^.*$" "Various Artists")
+    FILENAME="%(meta_album_artist)s/%(meta_album)s/%(meta_track)s %(meta_artist)s - %(title)s.%(ext)s"
+else
+    FILENAME="%(meta_album_artist)s/%(meta_album)s/%(meta_track)s %(title)s.%(ext)s"
+fi
 
 if $CUSTOM_YEAR; then
     ARGS+=(
@@ -86,12 +107,12 @@ if $PREVIEW; then
     exit 0
 fi
 
-if $RG; then
-    if $NO_ALBUM; then
+if ! $NO_RG; then
+    if $NO_ALBUM_RG; then
         ARGS+=(--use-postprocessor 'ReplayGain:when=playlist;no_album=true')
     else
         ARGS+=(--use-postprocessor 'ReplayGain:when=playlist')
     fi
 fi
 
-yt-dlp "${ARGS[@]}" --output "%(meta_album_artist)s/%(meta_album)s/%(meta_track)s %(title)s.%(ext)s" "$URL"
+yt-dlp "${ARGS[@]}" --output "$FILENAME" "$URL"
