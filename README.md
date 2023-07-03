@@ -21,14 +21,17 @@ A `when` argument of either `playlist` or `after_move` must be used, otherwise r
 
 ```shell
 # Download a playlist, set album gain:
-yt-dlp --use-postprocessor ReplayGain:when=playlist [playlist URL]
+yt-dlp --use-postprocessor ReplayGain:when=playlist {playlist URL}
 
 # Download a playlist, do NOT set album gain:
-yt-dlp --use-postprocessor "ReplayGain:when=playlist;no_album=true" [playlist URL]
+yt-dlp --use-postprocessor "ReplayGain:when=playlist;no_album=true" {playlist URL}
 
 # Alternative syntax for the above, because freedom:
-yt-dlp --use-postprocessor ReplayGain:when=playlist --postprocessor-args ReplayGain:no_album [playlist URL]
+yt-dlp --use-postprocessor ReplayGain:when=playlist --postprocessor-args ReplayGain:no_album {playlist URL}
+
+# Or, if freedom is not your bag, just use my script!
+yt-albumdownload [--various] {playlist URL}
 
 # Download a single track:
-yt-dlp --use-postprocessor ReplayGain:when=after_move [track URL]
+yt-dlp --use-postprocessor ReplayGain:when=after_move {track URL}
 ```
