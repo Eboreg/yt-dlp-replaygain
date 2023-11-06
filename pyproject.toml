@@ -2,5 +2,29 @@
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "yt-dlp-replaygain"
+version = "1.2.0"
+
+[project.optional-dependencies]
+dev = [
+    "isort",
+    "yt-dlp",
+]
+
 [tool.distutils.bdist_wheel]
 universal = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pylint.main]
+disable = [
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "missing-module-docstring",
+    "too-few-public-methods",
+    "too-many-arguments",
+]
+ignore = [".venv", ".git", "__pycache__", ".vscode"]
+max-line-length = 119

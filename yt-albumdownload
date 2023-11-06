@@ -5,8 +5,8 @@ DUMP=false
 NO_ALBUM_RG=false
 NO_RG=false
 PREVIEW=false
-URL=""
 VARIOUS=false
+YT_DLP_ARGS=""
 
 HELP="Usage: yt-albumdownload [options] <Youtube playlist URL>
 
@@ -16,7 +16,7 @@ Some arguments are mutually exclusive. It's probably somewhat self-evident which
 --various: Set album artist and immediate subdirectory to 'Various Artists' and filename to
   '[track #] [track artist] - [track title]'; implies --no-album-rg
 --no-rg: Don't apply replaygain
---no-album-rg: Don't treat as album when applying replaygain
+--no-album: Don't treat as album when applying replaygain
 --year <YEAR>: Use YEAR instead of parsing release year (could be an empty string)
 --preview: Just output preview JSON (NB: File extensions will be unknown at this point)
 --dump: Just dump complete JSON output from yt-dlp to stdout"
@@ -47,7 +47,7 @@ while (( "$#" )); do
             ;;
         --year)
             CUSTOM_YEAR=true
-            YEAR=$2
+            YEAR="$2"
             shift 2
             ;;
         --no-rg)
@@ -59,7 +59,7 @@ while (( "$#" )); do
             shift
             ;;
         *)
-            URL=$1
+            YT_DLP_ARGS="$YT_DLP_ARGS $1"
             shift
             ;;
     esac
@@ -75,14 +75,15 @@ ARGS=(
     --replace-in-metadata meta_album_artist " - Topic" ""
     --replace-in-metadata meta_date "^NA$" ""
     --replace-in-metadata meta_year "^NA$" ""
+    --replace-in-metadata title "/" "-"
     --extract-audio
 )
 
 if $VARIOUS; then
     ARGS+=(--replace-in-metadata meta_album_artist "^.*$" "Various Artists")
-    FILENAME="%(meta_album_artist)s/%(meta_album)s/%(meta_track)s %(meta_artist)s - %(title)s.%(ext)s"
+    FILENAME="%(meta_album_artist)s/%(meta_album)s/%(meta_track)s - %(meta_artist)s - %(title)s.%(ext)s"
 else
-    FILENAME="%(meta_album_artist)s/%(meta_album)s/%(meta_track)s %(title)s.%(ext)s"
+    FILENAME="%(meta_album_artist)s/%(meta_album)s/%(meta_track)s - %(title)s.%(ext)s"
 fi
 
 if $CUSTOM_YEAR; then
@@ -93,7 +94,7 @@ if $CUSTOM_YEAR; then
 fi
 
 if $DUMP; then
-    yt-dlp "${ARGS[@]}" --dump-single-json --simulate "$URL"
+    yt-dlp "${ARGS[@]}" --dump-single-json --simulate $YT_DLP_ARGS
     exit 0
 fi
 
@@ -103,7 +104,7 @@ if $PREVIEW; then
         'track: .meta_track, artist: .meta_artist, title: .title, date: .meta_date,'
         'filename: [.meta_album_artist, "/", .meta_album, "/", .meta_track, " ", .title, ".[ext]"]|add}'
     )
-    yt-dlp "${ARGS[@]}" --dump-single-json --simulate "$URL" | jq "${JQ_ARGS[*]}"
+    yt-dlp "${ARGS[@]}" --dump-single-json --simulate $YT_DLP_ARGS | jq "${JQ_ARGS[*]}"
     exit 0
 fi
 
@@ -115,4 +116,4 @@ if ! $NO_RG; then
     fi
 fi
 
-yt-dlp "${ARGS[@]}" --output "$FILENAME" "$URL"
+yt-dlp "${ARGS[@]}" --output "$FILENAME" $YT_DLP_ARGS

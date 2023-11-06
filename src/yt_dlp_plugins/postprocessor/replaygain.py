@@ -1,7 +1,7 @@
 import subprocess
-from typing import Iterable, List, Set, Tuple
+from typing import Iterable
 
-from yt_dlp.postprocessor.common import PostProcessor  # type: ignore
+from yt_dlp.postprocessor.common import PostProcessor
 
 
 class ReplayGainApplication:
@@ -12,31 +12,31 @@ class ReplayGainApplication:
         self.extensions = extensions.lower().split(" ")
         self.test = test.split(" ")
 
-    def exec(self, filepaths: Iterable[str], no_album=False) -> Set[str]:
-        matching = self.filter(filepaths, no_album)
+    def exec(self, filepaths: Iterable[str], no_album=False) -> set[str]:
+        matching = self.filter(filepaths)
         if no_album:
-            result = subprocess.run(self.args_no_album + list(matching))
+            result = subprocess.run(self.args_no_album + list(matching), check=False)
         else:
-            result = subprocess.run(self.args + list(matching))
+            result = subprocess.run(self.args + list(matching), check=False)
         if result.returncode == 0:
             return matching
         return set()
 
     def exists(self) -> bool:
-        result = subprocess.run(self.test, capture_output=True)
+        result = subprocess.run(self.test, capture_output=True, check=False)
         return result.returncode == 0
 
-    def filter(self, filepaths: Iterable[str], no_album=False) -> Set[str]:
+    def filter(self, filepaths: Iterable[str]) -> set[str]:
         return {f for f in filepaths if f.split(".")[-1].lower() in self.extensions}
 
 
 class Metaflac(ReplayGainApplication):
-    def exec(self, filepaths: Iterable[str], no_album=False) -> Set[str]:
+    def exec(self, filepaths: Iterable[str], no_album=False) -> set[str]:
         if no_album:
             handled = set()
-            matching = self.filter(filepaths, no_album)
+            matching = self.filter(filepaths)
             for path in matching:
-                result = subprocess.run(self.args + [path])
+                result = subprocess.run(self.args + [path], check=False)
                 if result.returncode == 0:
                     handled.add(path)
             return handled
@@ -45,7 +45,7 @@ class Metaflac(ReplayGainApplication):
 
 class ReplayGainPP(PostProcessor):
     no_album = False
-    applications: List[ReplayGainApplication] = [
+    applications: list[ReplayGainApplication] = [
         ReplayGainApplication(
             name="rsgain",
             args="rsgain custom --tagmode=i --loudness=-18 --opus-mode=r --album",
@@ -90,10 +90,12 @@ class ReplayGainPP(PostProcessor):
         if "filepath" in information:
             filepaths.add(information["filepath"])
 
-        for entry in information.get("entries", []):
-            for download in entry.get("requested_downloads", []):
-                if "filepath" in download:
-                    filepaths.add(download["filepath"])
+        if isinstance(information, dict):
+            for entry in information.get("entries", []):
+                if isinstance(entry, dict):
+                    for download in entry.get("requested_downloads", []):
+                        if isinstance(download, dict) and "filepath" in download:
+                            filepaths.add(download["filepath"])
 
         for app in self.applications:
             if not filepaths:

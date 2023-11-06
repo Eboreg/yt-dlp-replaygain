@@ -7,7 +7,7 @@ It tries to use these applications, in this order:
 3. [vorbisgain](https://sjeng.org/vorbisgain.html)
 4. [metaflac](https://xiph.org/flac/documentation_tools_metaflac.html)
 
-As a bonus, I have included my Bash script for downloading albums from Youtube: [yt-albumdownload](https://github.com/Eboreg/yt-dlp-replaygain/blob/master/yt-albumdownload). It arranges the files in the structure: `[album artist]/[album]/[track number] [track name].[extension]`, where `album artist` is taken from the playlist uploader name (with that pesky " - Topic" suffix stripped). If used with `--various`, album replaygain will not be set.
+As a bonus, I have included my Bash script for downloading albums from Youtube: [yt-albumdownload](https://github.com/Eboreg/yt-dlp-replaygain/blob/master/yt-albumdownload). It arranges the files in the structure: `[album artist]/[album]/[track number] - [track name].[extension]`, where `album artist` is taken from the playlist uploader name (with that pesky " - Topic" suffix stripped). If used with `--various`, album replaygain will not be set, and the file structure will be `Various Artists/[album]/[track number] - [track artist] - [track name].[extension]`.
 
 ## Installation
 
