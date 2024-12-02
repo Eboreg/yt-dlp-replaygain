@@ -12,7 +12,7 @@ class ReplayGainApplication:
         self.extensions = extensions.lower().split(" ")
         self.test = test.split(" ")
 
-    def exec(self, filepaths: Iterable[str], no_album=False) -> set[str]:
+    def exec(self, filepaths: Iterable[str], no_album=False) -> "set[str]":
         matching = self.filter(filepaths)
         if no_album:
             result = subprocess.run(self.args_no_album + list(matching), check=False)
@@ -26,12 +26,12 @@ class ReplayGainApplication:
         result = subprocess.run(self.test, capture_output=True, check=False)
         return result.returncode == 0
 
-    def filter(self, filepaths: Iterable[str]) -> set[str]:
+    def filter(self, filepaths: Iterable[str]) -> "set[str]":
         return {f for f in filepaths if f.split(".")[-1].lower() in self.extensions}
 
 
 class Metaflac(ReplayGainApplication):
-    def exec(self, filepaths: Iterable[str], no_album=False) -> set[str]:
+    def exec(self, filepaths: Iterable[str], no_album=False) -> "set[str]":
         if no_album:
             handled = set()
             matching = self.filter(filepaths)
@@ -45,11 +45,11 @@ class Metaflac(ReplayGainApplication):
 
 class ReplayGainPP(PostProcessor):
     no_album = False
-    applications: list[ReplayGainApplication] = [
+    applications: "list[ReplayGainApplication]" = [
         ReplayGainApplication(
             name="rsgain",
-            args="rsgain custom --tagmode=i --loudness=-18 --opus-mode=r --album",
-            args_no_album="rsgain custom --tagmode=i --loudness=-18 --opus-mode=r",
+            args="rsgain custom --tagmode=i --album",
+            args_no_album="rsgain custom --tagmode=i",
             extensions="aiff flac ape mp2 mp3 m4a mpc ogg oga spx opus wav wv wma",
             test="rsgain",
         ),
